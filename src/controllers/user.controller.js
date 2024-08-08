@@ -3,7 +3,7 @@ import {ApiError} from "../utils/ApiError.js"
 import {User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponce } from '../utils/ApiResponce.js'
-
+import jwt from 'jsonwebtoken'
 
 const generateAccessAndRefereshTokens = async(userId) =>{
     try {
@@ -110,15 +110,14 @@ const loginUser = asyncHandler(async (req, res) =>{
     const {email, username, password} = req.body
     console.log(email);
 
-    if (!username && !email) {
-        throw new ApiError(400, "username or email is required")
-    }
-    
-    // Here is an alternative of above code based on logic discussed in video:
-    // if (!(username || email)) {
+    // if (!username && !email) {
     //     throw new ApiError(400, "username or email is required")
-        
     // }
+
+    if (!(username || email)) {
+        throw new ApiError(400, "username or email is required")
+        
+    }
 
     const user = await User.findOne({
         $or: [{username}, {email}]
@@ -182,6 +181,19 @@ const logoutUser = asyncHandler(async(req, res) => {
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json(new ApiResponce(200, {}, "User logged Out"))
+})
+
+const refreshAccessToken = asyncHandler(async (req, res)=> {
+   const incomingRefreshToken =  req.cookies.refreshToken || req.body.refreshToken
+
+   if (incomingRefreshToken) {
+    throw new ApiError(401, "Unauthorized request")
+   }
+
+   jwt.verify(
+    incomingRefreshToken,
+    
+   )
 })
 
 export {registorUser, loginUser, logoutUser}
